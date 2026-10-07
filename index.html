@@ -106,7 +106,7 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const SENDER_EMAIL = 'phmclp50thyear@gmail.com';
-        const EMAILJS_SERVICE_ID = 'service_fymjepu';
+        const EMAILJS_SERVICE_ID = 'service_6l0gqn6';
         const EMAILJS_TEMPLATE_ID = 'template_wnpnpak';
 
         const form = document.getElementById('customerForm');
@@ -235,7 +235,7 @@
             sendBtn.textContent = 'Sending...';
 
             try {
-                // 1. Send via EmailJS using your template_wnpnpak & service_fasldxb
+                // 1. Send via EmailJS using your template_wnpnpak & service_6l0gqn6
                 await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
                     to_name: selectedCustomer.name,
                     to_email: selectedCustomer.email_add,
