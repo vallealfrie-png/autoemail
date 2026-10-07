@@ -3,92 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Data & Dynamic Email System</title>
+    <title>Golden Legacy - Customer & Dynamic Email Hub</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS Client -->
+    <!-- Supabase JS Client v2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-50 min-h-screen p-6">
-    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">Customer Data & Personalized Email Hub</h1>
+<body class="bg-slate-50 min-h-screen p-6">
+    <div class="max-w-6xl mx-auto space-y-8">
         
-        <!-- Data Entry Form -->
-        <form id="customerForm" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                <input type="text" id="name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <h1 class="text-2xl font-bold text-slate-800">Golden Legacy Constellation Icon</h1>
+                <p class="text-slate-500 text-sm">Customer Data Management & Dynamic Email Dispatcher</p>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Contact No.</label>
-                <input type="text" id="contact" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-indigo-500 focus:border-indigo-500">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Email Address</label>
-                <input type="email" id="email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-indigo-500 focus:border-indigo-500">
-            </div>
-            <div class="md:col-span-3">
-                <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 transition">Save & Queue Email</button>
-            </div>
-        </form>
+            <img src="https://i.imgur.com/9VRfCGa.png" alt="Banner" class="h-16 object-contain rounded-lg border border-slate-100 shadow-sm">
+        </div>
 
-        <!-- Customer Table View (Spreadsheet Alternative) -->
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">Customer Records</h2>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="customerTableBody" class="bg-white divide-y divide-gray-200">
-                    <!-- Dynamic rows loaded via JS -->
-                </tbody>
-            </table>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Form Section -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:col-span-1 h-fit">
+                <h2 class="text-lg font-semibold text-slate-800 mb-4">Add New Customer</h2>
+                <form id="customerForm" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Full Name</label>
+                        <input type="text" id="name" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Email Address</label>
+                        <input type="email" id="email_add" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Contact No.</label>
+                        <input type="text" id="contact_no" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Occupation</label>
+                        <input type="text" id="occupation" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 px-4 rounded-lg text-sm transition shadow-sm">
+                        Save to Database
+                    </button>
+                </form>
+            </div>
+
+            <!-- Table Section -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:col-span-2 overflow-hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-slate-800">Database Records</h2>
+                    <button onclick="fetchCustomers()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-medium transition">Refresh</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead>
+                            <tr class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                <th class="pb-3 px-2">Name / Details</th>
+                                <th class="pb-3 px-2">Contact</th>
+                                <th class="pb-3 px-2">Status</th>
+                                <th class="pb-3 px-2 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTableBody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Email Preview Modal -->
+    <div id="emailModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-semibold text-slate-800">Email HTML Preview</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 font-bold">&times;</button>
+            </div>
+            <div id="emailPreviewContent" class="border rounded-xl p-4 bg-slate-50 max-h-96 overflow-y-auto"></div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-medium">Close</button>
+                <button id="confirmSendBtn" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium">Simulate & Record Success</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Initialize Supabase Client
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        // Supabase Initialization
+        const SUPABASE_URL = 'https://phusgdjdfckjfkfmussv.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_jDdtfYBLjT3WZF3pqm0yIw_s3cxckkz';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const form = document.getElementById('customerForm');
         const tableBody = document.getElementById('customerTableBody');
+        let selectedCustomer = null;
 
+        // Fetch and display customers from the 'database' table
         async function fetchCustomers() {
-            const { data, error } = await supabaseClient.from('customers').select('*').order('created_at', { ascending: false });
+            const { data, error } = await supabaseClient
+                .from('database')
+                .select('*')
+                .order('name', { ascending: true });
+
             if (error) {
                 console.error('Error fetching data:', error);
+                tableBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-rose-500">Error loading records: ${error.message}</td></tr>`;
                 return;
             }
+
+            if (!data || data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-400">No records found in database.</td></tr>`;
+                return;
+            }
+
             tableBody.innerHTML = '';
             data.forEach(cust => {
-                const row = `<tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cust.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cust.contact_no}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cust.email}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button onclick="triggerEmail('${cust.id}')" class="text-indigo-600 hover:text-indigo-900">Send Dynamic Email</button>
-                    </td>
-                </tr>`;
+                let statusBadge = '';
+                if (cust.status === 'success') {
+                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">success</span>`;
+                } else if (cust.status === 'failed') {
+                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">failed</span>`;
+                } else {
+                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">Pending</span>`;
+                }
+
+                const row = `
+                    <tr class="hover:bg-slate-50/50">
+                        <td class="py-3 px-2">
+                            <div class="font-medium text-slate-900">${cust.name}</div>
+                            <div class="text-xs text-slate-500">${cust.email_add} &bull; ${cust.occupation || 'N/A'}</div>
+                        </td>
+                        <td class="py-3 px-2 text-slate-600">${cust.contact_no}</td>
+                        <td class="py-3 px-2">${statusBadge}</td>
+                        <td class="py-3 px-2 text-right">
+                            <button onclick='openEmailPreview(${JSON.stringify(cust)})' class="bg-amber-50 hover:bg-amber-100 text-amber-700 font-medium px-3 py-1.5 rounded-lg text-xs transition">
+                                Send Email
+                            </button>
+                        </td>
+                    </tr>
+                `;
                 tableBody.innerHTML += row;
             });
         }
 
+        // Handle Form Submission
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('name').value;
-            const contact_no = document.getElementById('contact').value;
-            const email = document.getElementById('email').value;
+            const email_add = document.getElementById('email_add').value;
+            const contact_no = document.getElementById('contact_no').value;
+            const occupation = document.getElementById('occupation').value;
 
-            const { error } = await supabaseClient.from('customers').insert([{ name, contact_no, email }]);
+            const { error } = await supabaseClient
+                .from('database')
+                .insert([{ name, email_add, contact_no, occupation, status: 'pending' }]);
+
             if (error) {
-                alert('Error saving data: ' + error.message);
+                alert('Error saving record: ' + error.message);
             } else {
                 alert('Customer saved successfully!');
                 form.reset();
@@ -96,12 +169,71 @@
             }
         });
 
-        async function triggerEmail(id) {
-            alert('Triggering personalized email for ID: ' + id);
-            // Call Supabase Edge Function here to generate dynamic text and attachments
+        // Generate Dynamic HTML Email Content
+        function generateEmailHtml(recipientName) {
+            return `
+                <div style="font-family: Arial, sans-serif; background-color: #f8fafc; padding: 24px; color: #334155;">
+                    <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+                        <!-- Banner Image -->
+                        <div style="background-color: #0f172a; text-align: center; padding: 20px;">
+                            <img src="https://i.imgur.com/9VRfCGa.png" alt="Golden Legacy Constellation Icon" style="max-height: 80px; width: auto;">
+                        </div>
+                        <!-- Content Body -->
+                        <div style="padding: 32px;">
+                            <h2 style="color: #0f172a; margin-top: 0;">Warmest Greetings, ${recipientName}!</h2>
+                            <p style="line-height: 1.6; font-size: 15px;">
+                                We are writing this message to extend our deepest gratitude and appreciation to you. Being an integral part of the <strong>"Golden Legacy Constellation Icon"</strong> is a true milestone, and your presence, dedication, and support mean the world to us.
+                            </p>
+                            <p style="line-height: 1.6; font-size: 15px;">
+                                Thank you for shining brightly within our constellation and for helping us build an extraordinary legacy together.
+                            </p>
+                            <div style="margin-top: 32px; border-top: 1px solid #e2e8f0; padding-top: 20px; font-size: 13px; color: #64748b;">
+                                <p style="margin: 0;">Warm regards,</p>
+                                <p style="margin: 4px 0 0 0; font-weight: bold; color: #0f172a;">The Golden Legacy Team</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
-        // Load data on page load
+        // Preview modal handler
+        function openEmailPreview(customer) {
+            selectedCustomer = customer;
+            const previewContainer = document.getElementById('emailPreviewContent');
+            previewContainer.innerHTML = generateEmailHtml(customer.name);
+            document.getElementById('emailModal').classList.remove('hidden');
+            document.getElementById('emailModal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('emailModal').classList.remove('flex');
+            document.getElementById('emailModal').classList.add('hidden');
+            selectedCustomer = null;
+        }
+
+        // Simulate sending and update status to 'success' in Supabase
+        document.getElementById('confirmSendBtn').addEventListener('click', async () => {
+            if (!selectedCustomer) return;
+
+            // In production, you would call a backend service or Supabase Edge Function with 
+            // the generated HTML to dispatch via an email API provider like Resend or SendGrid.
+            
+            const { error } = await supabaseClient
+                .from('database')
+                .update({ status: 'success' })
+                .eq('email_add', selectedCustomer.email_add);
+
+            if (error) {
+                alert('Failed to update email status: ' + error.message);
+            } else {
+                alert(`Dynamic email successfully simulated & dispatched to ${selectedCustomer.name}! Status updated to success.`);
+                closeModal();
+                fetchCustomers();
+            }
+        });
+
+        // Load records on page launch
         fetchCustomers();
     </script>
 </body>
