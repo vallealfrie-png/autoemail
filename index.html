@@ -8,6 +8,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS Client v2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- EmailJS SDK v4 -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+        // Initialize EmailJS with your Public Key
+        emailjs.init('hVCQBuCio-_l93Osa');
+    </script>
 </head>
 <body class="bg-slate-50 min-h-screen p-6">
     <div class="max-w-6xl mx-auto space-y-8">
@@ -80,15 +86,15 @@
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
                 <div>
-                    <h3 class="font-semibold text-slate-800">Email HTML Preview</h3>
+                    <h3 class="font-semibold text-slate-800">Email Preview & Dispatch</h3>
                     <p class="text-xs text-slate-500">From: phmclp50thyear@gmail.com</p>
                 </div>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 font-bold">&times;</button>
             </div>
             <div id="emailPreviewContent" class="border rounded-xl p-4 bg-slate-50 max-h-96 overflow-y-auto"></div>
             <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-medium">Close</button>
-                <button id="confirmSendBtn" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium">Send & Record Success</button>
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-medium">Cancel</button>
+                <button id="confirmSendBtn" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium">Send Real Email & Update Status</button>
             </div>
         </div>
     </div>
@@ -100,6 +106,8 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const SENDER_EMAIL = 'phmclp50thyear@gmail.com';
+        const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID'; // Replace with your actual EmailJS Service ID (e.g. service_xxxxxxx)
+        const EMAILJS_TEMPLATE_ID = 'template_wnpnpak';
 
         const form = document.getElementById('customerForm');
         const tableBody = document.getElementById('customerTableBody');
@@ -174,7 +182,7 @@
             }
         });
 
-        // Generate Dynamic HTML Email Content
+        // Generate Local Preview HTML
         function generateEmailHtml(recipientName) {
             return `
                 <div style="font-family: Arial, sans-serif; background-color: #f8fafc; padding: 24px; color: #334155;">
@@ -218,21 +226,48 @@
             selectedCustomer = null;
         }
 
-        // Update status to 'success' in Supabase when sent
+        // Trigger EmailJS Real Send & Update Supabase Status
         document.getElementById('confirmSendBtn').addEventListener('click', async () => {
             if (!selectedCustomer) return;
 
-            const { error } = await supabaseClient
-                .from('database')
-                .update({ status: 'success' })
-                .eq('email_add', selectedCustomer.email_add);
+            const sendBtn = document.getElementById('confirmSendBtn');
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
 
-            if (error) {
-                alert('Failed to update email status: ' + error.message);
-            } else {
-                alert(`Dynamic email successfully dispatched from ${SENDER_EMAIL} to ${selectedCustomer.name} (${selectedCustomer.email_add})! Status updated to success.`);
+            try {
+                // 1. Send via EmailJS using your template_wnpnpak
+                await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+                    to_name: selectedCustomer.name,
+                    to_email: selectedCustomer.email_add,
+                    reply_to: SENDER_EMAIL
+                });
+
+                // 2. Update Supabase table status to 'success'
+                const { error } = await supabaseClient
+                    .from('database')
+                    .update({ status: 'success' })
+                    .eq('email_add', selectedCustomer.email_add);
+
+                if (error) throw error;
+
+                alert(`Email successfully sent to ${selectedCustomer.name} (${selectedCustomer.email_add})!`);
                 closeModal();
                 fetchCustomers();
+
+            } catch (err) {
+                console.error(err);
+                alert('Failed to send email: ' + (err.text || err.message));
+
+                // Log 'failed' status to Supabase if email transmission errors out
+                await supabaseClient
+                    .from('database')
+                    .update({ status: 'failed' })
+                    .eq('email_add', selectedCustomer.email_add);
+                
+                fetchCustomers();
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send Real Email & Update Status';
             }
         });
 
