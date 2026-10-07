@@ -76,4 +76,168 @@
     </div>
 
     <!-- Email Preview Modal -->
-    <div id
+    <div id="emailModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <div>
+                    <h3 class="font-semibold text-slate-800">Email HTML Preview</h3>
+                    <p class="text-xs text-slate-500">From: phmclp50thyear@gmail.com</p>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 font-bold">&times;</button>
+            </div>
+            <div id="emailPreviewContent" class="border rounded-xl p-4 bg-slate-50 max-h-96 overflow-y-auto"></div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-medium">Close</button>
+                <button id="confirmSendBtn" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium">Send & Record Success</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase Initialization
+        const SUPABASE_URL = 'https://phusgdjdfckjfkfmussv.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_jDdtfYBLjT3WZF3pqm0yIw_s3cxckkz';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const SENDER_EMAIL = 'phmclp50thyear@gmail.com';
+
+        const form = document.getElementById('customerForm');
+        const tableBody = document.getElementById('customerTableBody');
+        let selectedCustomer = null;
+
+        // Fetch and display customers from the 'database' table
+        async function fetchCustomers() {
+            const { data, error } = await supabaseClient
+                .from('database')
+                .select('*')
+                .order('name', { ascending: true });
+
+            if (error) {
+                console.error('Error fetching data:', error);
+                tableBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-rose-500">Error loading records: ${error.message}</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-400">No records found in database.</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = '';
+            data.forEach(cust => {
+                let statusBadge = '';
+                if (cust.status === 'success') {
+                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">success</span>`;
+                } else if (cust.status === 'failed') {
+                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">failed</span>`;
+                } else {
+                    statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">Pending</span>`;
+                }
+
+                const row = `
+                    <tr class="hover:bg-slate-50/50">
+                        <td class="py-3 px-2">
+                            <div class="font-medium text-slate-900">${cust.name}</div>
+                            <div class="text-xs text-slate-500">${cust.email_add} &bull; ${cust.occupation || 'N/A'}</div>
+                        </td>
+                        <td class="py-3 px-2 text-slate-600">${cust.contact_no}</td>
+                        <td class="py-3 px-2">${statusBadge}</td>
+                        <td class="py-3 px-2 text-right">
+                            <button onclick='openEmailPreview(${JSON.stringify(cust)})' class="bg-amber-50 hover:bg-amber-100 text-amber-700 font-medium px-3 py-1.5 rounded-lg text-xs transition">
+                                Send Email
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        // Handle Form Submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email_add = document.getElementById('email_add').value;
+            const contact_no = document.getElementById('contact_no').value;
+            const occupation = document.getElementById('occupation').value;
+
+            const { error } = await supabaseClient
+                .from('database')
+                .insert([{ name, email_add, contact_no, occupation, status: 'pending' }]);
+
+            if (error) {
+                alert('Error saving record: ' + error.message);
+            } else {
+                alert('Customer saved successfully!');
+                form.reset();
+                fetchCustomers();
+            }
+        });
+
+        // Generate Dynamic HTML Email Content
+        function generateEmailHtml(recipientName) {
+            return `
+                <div style="font-family: Arial, sans-serif; background-color: #f8fafc; padding: 24px; color: #334155;">
+                    <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+                        <!-- Banner Image -->
+                        <div style="background-color: #0f172a; text-align: center; padding: 20px;">
+                            <img src="https://i.imgur.com/9VRfCGa.png" alt="Golden Legacy Constellation Icon" style="max-height: 80px; width: auto;">
+                        </div>
+                        <!-- Content Body -->
+                        <div style="padding: 32px;">
+                            <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 4px;">From: ${SENDER_EMAIL}</p>
+                            <h2 style="color: #0f172a; margin-top: 0;">Warmest Greetings, ${recipientName}!</h2>
+                            <p style="line-height: 1.6; font-size: 15px;">
+                                We are writing this message to extend our deepest gratitude and appreciation to you. Being an integral part of the <strong>"Golden Legacy Constellation Icon"</strong> is a true milestone, and your presence, dedication, and support mean the world to us.
+                            </p>
+                            <p style="line-height: 1.6; font-size: 15px;">
+                                Thank you for shining brightly within our constellation and for helping us build an extraordinary legacy together.
+                            </p>
+                            <div style="margin-top: 32px; border-top: 1px solid #e2e8f0; padding-top: 20px; font-size: 13px; color: #64748b;">
+                                <p style="margin: 0;">Warm regards,</p>
+                                <p style="margin: 4px 0 0 0; font-weight: bold; color: #0f172a;">The Golden Legacy Team</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Preview modal handler
+        function openEmailPreview(customer) {
+            selectedCustomer = customer;
+            const previewContainer = document.getElementById('emailPreviewContent');
+            previewContainer.innerHTML = generateEmailHtml(customer.name);
+            document.getElementById('emailModal').classList.remove('hidden');
+            document.getElementById('emailModal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('emailModal').classList.remove('flex');
+            document.getElementById('emailModal').classList.add('hidden');
+            selectedCustomer = null;
+        }
+
+        // Update status to 'success' in Supabase when sent
+        document.getElementById('confirmSendBtn').addEventListener('click', async () => {
+            if (!selectedCustomer) return;
+
+            const { error } = await supabaseClient
+                .from('database')
+                .update({ status: 'success' })
+                .eq('email_add', selectedCustomer.email_add);
+
+            if (error) {
+                alert('Failed to update email status: ' + error.message);
+            } else {
+                alert(`Dynamic email successfully dispatched from ${SENDER_EMAIL} to ${selectedCustomer.name} (${selectedCustomer.email_add})! Status updated to success.`);
+                closeModal();
+                fetchCustomers();
+            }
+        });
+
+        // Load records on page launch
+        fetchCustomers();
+    </script>
+</body>
+</html>
