@@ -111,8 +111,8 @@
         const EMAILJS_SERVICE_ID = 'service_6l0gqn6';
         const EMAILJS_TEMPLATE_ID = 'template_wnpnpak';
         
-        // Updated new certificate template URL (name placeholder removed)
-        const CERT_TEMPLATE_URL = 'https://i.imgur.com/4iYF7gF.jpeg'; // Please replace with your uploaded clean version image URL if hosted elsewhere, or keep using your current host URL
+        // Certificate template URL
+        const CERT_TEMPLATE_URL = 'https://i.imgur.com/G5iL00j.png';
 
         const form = document.getElementById('customerForm');
         const tableBody = document.getElementById('customerTableBody');
@@ -192,7 +192,7 @@
             }
         });
 
-        // Generate dynamic certificate image on HTML5 Canvas for the new layout
+        // Generate dynamic certificate image on HTML5 Canvas with Times New Roman and #f6d273 color
         async function generateAndUploadCertificate(customerName) {
             return new Promise((resolve, reject) => {
                 const canvas = document.getElementById('certCanvas');
@@ -205,15 +205,15 @@
                     // Draw template image onto canvas
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                    // Configure text styling with gold/amber color matching the new design
-                    ctx.font = 'bold 72px Arial, sans-serif';
-                    ctx.fillStyle = '#dfb15b'; // Elegant gold theme color matching certificate headers/accents
+                    // Configure text styling with Times New Roman and #f6d273 color
+                    ctx.font = 'bold 72px "Times New Roman", Times, serif';
+                    ctx.fillStyle = '#f6d273'; 
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
 
-                    // Coordinates mapped for the new layout's name slot (centered between headers and body text)[cite: 5]
+                    // Coordinates for the name slot on the certificate canvas
                     const x = canvas.width / 2;
-                    const y = 640; 
+                    const y = 700; 
 
                     // Stamp customer's name dynamically
                     ctx.fillText(customerName, x, y);
@@ -251,9 +251,9 @@
             selectedCustomer = customer;
             const previewContainer = document.getElementById('emailPreviewContent');
             previewContainer.innerHTML = `
-                <p class="text-sm text-slate-600 mb-4">Ready to generate a personalized certificate for <strong>${customer.name}</strong> using the new design layout[cite: 5] and dispatch via email.</p>
+                <p class="text-sm text-slate-600 mb-4">Ready to generate a personalized certificate for <strong>${customer.name}</strong> in Times New Roman (#f6d273) and dispatch via email.</p>
                 <div class="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg text-xs">
-                    Clicking send will dynamically render the certificate with their name in the gold theme font, save it to Supabase Storage, and send the email with the download link.
+                    Clicking send will dynamically render the certificate, save it to Supabase Storage, and send the email with the download link.
                 </div>
             `;
             document.getElementById('emailModal').classList.remove('hidden');
