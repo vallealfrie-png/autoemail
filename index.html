@@ -114,7 +114,7 @@
         const EMAILJS_TEMPLATE_ID = 'template_wnpnpak';
         
         // Certificate template URL
-        const CERT_TEMPLATE_URL = 'https://i.imgur.com/4iYF7gF.jpeg';
+        const CERT_TEMPLATE_URL = 'https://i.imgur.com/G5iL00j.png';
 
         const form = document.getElementById('customerForm');
         const tableBody = document.getElementById('customerTableBody');
@@ -194,27 +194,40 @@
             }
         });
 
-        // Helper to extract day from created_at (e.g. "2026-10-07 03:46:35.051434+00" -> "07" or "7")
-        function extractDayFromCreatedAt(createdAtString) {
-            if (!createdAtString) return '1';
-            try {
-                // Parse date string or use regex to extract DD from YYYY-MM-DD
-                const match = createdAtString.match(/^\d{4}-\d{2}-(\d{2})/);
-                if (match && match[1]) {
-                    // Parse as integer to remove leading zero if desired, or keep string. parseInt('07') -> 7
-                    return String(parseInt(match[1], 10));
+        // Helper to get day with ordinal suffix (e.g. 7 -> "7th", 1 -> "1st", 2 -> "2nd", 3 -> "3rd")
+        function getDayWithOrdinal(createdAtString) {
+            let dayNum = 1;
+            if (createdAtString) {
+                try {
+                    const match = createdAtString.match(/^\d{4}-\d{2}-(\d{2})/);
+                    if (match && match[1]) {
+                        dayNum = parseInt(match[1], 10);
+                    } else {
+                        const dateObj = new Date(createdAtString);
+                        if (!isNaN(dateObj.getTime())) {
+                            dayNum = dateObj.getDate();
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error parsing created_at:", e);
                 }
-                const dateObj = new Date(createdAtString);
-                if (!isNaN(dateObj.getTime())) {
-                    return String(dateObj.getDate());
-                }
-            } catch (e) {
-                console.error("Error parsing created_at:", e);
             }
-            return '1';
+
+            const j = dayNum % 10,
+                  k = dayNum % 100;
+            if (j == 1 && k != 11) {
+                return dayNum + "st";
+            }
+            if (j == 2 && k != 12) {
+                return dayNum + "nd";
+            }
+            if (j == 3 && k != 13) {
+                return dayNum + "rd";
+            }
+            return dayNum + "th";
         }
 
-        // Generate dynamic certificate image on HTML5 Canvas with Times New Roman (#f6d273) and Ubuntu white date
+        // Generate dynamic certificate image on HTML5 Canvas
         async function generateAndUploadCertificate(customer) {
             return new Promise((resolve, reject) => {
                 const canvas = document.getElementById('certCanvas');
@@ -237,19 +250,18 @@
                     const nameY = 700; 
                     ctx.fillText(customer.name, nameX, nameY);
 
-                    // 2. Extract and Draw Dynamic Date Day (Ubuntu, size 11 -> scaled up for 2000x1414 canvas, e.g. ~24px or adjust as needed, color white)
-                    const dayNumber = extractDayFromCreatedAt(customer.created_at);
+                    // 2. Extract and Draw Dynamic Date with Ordinal Suffix (Ubuntu, white, centered nicely between THIS and OF)
+                    const dayString = getDayWithOrdinal(customer.created_at);
                     
                     ctx.font = 'normal 24px "Ubuntu", sans-serif';
                     ctx.fillStyle = '#ffffff';
-                    ctx.textAlign = 'left';
+                    ctx.textAlign = 'center';
                     ctx.textBaseline = 'alphabetic';
 
-                    // Adjust coordinates based on where "GIVEN THIS [day] OF OCTOBER 2026" appears on your template
-                    // You can fine-tune dateX and dateY as needed
-                    const dateX = 265; 
-                    const dateY = 868; 
-                    ctx.fillText(dayNumber, dateX, dateY);
+                    // Corrected coordinate positioning between "THIS" and "OF"
+                    const dateX = 262; 
+                    const dateY = 835; 
+                    ctx.fillText(dayString, dateX, dateY);
 
                     // Convert canvas to blob (PNG format)
                     canvas.toBlob(async (blob) => {
@@ -282,10 +294,10 @@
         // Preview modal handler
         function openEmailPreview(customer) {
             selectedCustomer = customer;
-            const dayPreview = extractDayFromCreatedAt(customer.created_at);
+            const dayPreview = getDayWithOrdinal(customer.created_at);
             const previewContainer = document.getElementById('emailPreviewContent');
             previewContainer.innerHTML = `
-                <p class="text-sm text-slate-600 mb-4">Ready to generate a personalized certificate for <strong>${customer.name}</strong> with dynamic day <strong>${dayPreview}</strong> (Ubuntu font, white) and name in Times New Roman (#f6d273).</p>
+                <p class="text-sm text-slate-600 mb-4">Ready to generate a personalized certificate for <strong>${customer.name}</strong> with date <strong>${dayPreview}</strong> (Ubuntu font, white) and name in Times New Roman (#f6d273).</p>
                 <div class="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg text-xs">
                     Clicking send will dynamically render the certificate, save it to Supabase Storage, and send the email with the download link.
                 </div>
@@ -309,7 +321,7 @@
             sendBtn.textContent = 'Generating Certificate & Sending...';
 
             try {
-                // 1. Generate certificate and upload to Supabase Storage (passing full selectedCustomer object for created_at)
+                // 1. Generate certificate and upload to Supabase Storage
                 const certUrl = await generateAndUploadCertificate(selectedCustomer);
 
                 // 2. Save the generated cert URL back to the customer's database row
