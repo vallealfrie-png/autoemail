@@ -227,7 +227,7 @@
             return dayNum + "th";
         }
 
-        // Helper function to draw a glowing star shape on canvas (6x bigger with aggressive glow)
+        // Helper function to draw a glowing star shape on canvas (reduced size with balanced glow)
         function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius, fillColor) {
             let rot = Math.PI / 2 * 3;
             let x = cx;
@@ -235,9 +235,9 @@
             let step = Math.PI / spikes;
 
             ctx.save();
-            // Aggressive gold glow effect (enhanced blur for the 6x bigger star)
+            // Balanced gold glow effect for the reduced star size
             ctx.shadowColor = '#ffd700';
-            ctx.shadowBlur = 75;
+            ctx.shadowBlur = 35;
             ctx.fillStyle = fillColor;
 
             ctx.beginPath();
@@ -294,17 +294,17 @@
                     const dateY = 850; 
                     ctx.fillText(dayString, dateX, dateY);
 
-                    // 3. Draw 6x Bigger Star Above Date Issuance Area based on Star Tier
+                    // 3. Draw Reduced-Size Star Above Date Issuance Area based on Star Tier
                     const starTier = (customer.star || '').toLowerCase();
                     const starCenterX = 248; 
-                    const starCenterY = 720; // Adjusted vertical position to fit the 6x larger star
+                    const starCenterY = 755; // Adjusted vertical position for smaller star
 
                     if (starTier.includes('vega')) {
-                        // 6x Vega Star (Outer radius 270, Inner radius 108)
-                        drawStar(ctx, starCenterX, starCenterY, 5, 270, 108, '#f6d273');
+                        // Reduced Vega Star (Outer radius 90, Inner radius 36)
+                        drawStar(ctx, starCenterX, starCenterY, 5, 90, 36, '#f6d273');
                     } else if (starTier.includes('spica')) {
-                        // 6x Spica Star (Outer radius 168, Inner radius 66)
-                        drawStar(ctx, starCenterX, starCenterY, 5, 168, 66, '#f6d273');
+                        // Reduced Spica Star (Outer radius 55, Inner radius 22)
+                        drawStar(ctx, starCenterX, starCenterY, 5, 55, 22, '#f6d273');
                     }
 
                     // Convert canvas to blob (PNG format)
@@ -341,9 +341,9 @@
             const dayPreview = getDayWithOrdinal(customer.created_at);
             const previewContainer = document.getElementById('emailPreviewContent');
             previewContainer.innerHTML = `
-                <p class="text-sm text-slate-600 mb-4">Ready to generate certificate for <strong>${customer.name}</strong> with Star Tier: <strong>${customer.star || 'Standard'}</strong> (6x Bigger Glowing Star) and Date: <strong>${dayPreview}</strong>.</p>
+                <p class="text-sm text-slate-600 mb-4">Ready to generate certificate for <strong>${customer.name}</strong> with Star Tier: <strong>${customer.star || 'Standard'}</strong> (Reduced Star Size) and Date: <strong>${dayPreview}</strong>.</p>
                 <div class="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg text-xs">
-                    Clicking send will dynamically render the certificate with the massive glowing gold star, save it to Supabase Storage, and send the email with the download link.
+                    Clicking send will dynamically render the certificate with the beautifully proportioned glowing gold star, save it to Supabase Storage, and send the email with the download link.
                 </div>
             `;
             document.getElementById('emailModal').classList.remove('hidden');
