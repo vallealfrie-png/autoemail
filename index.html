@@ -50,6 +50,10 @@
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Occupation</label>
                         <input type="text" id="occupation" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
                     </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Star Tier (Vega / Spica)</label>
+                        <input type="text" id="star" required placeholder="e.g. Vega or Spica" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
                     <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 px-4 rounded-lg text-sm transition shadow-sm">
                         Save to Database
                     </button>
@@ -67,7 +71,7 @@
                         <thead>
                             <tr class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                                 <th class="pb-3 px-2">Name / Details</th>
-                                <th class="pb-3 px-2">Contact / Certificate</th>
+                                <th class="pb-3 px-2">Contact / Star</th>
                                 <th class="pb-3 px-2">Status</th>
                                 <th class="pb-3 px-2 text-right">Actions</th>
                             </tr>
@@ -113,7 +117,7 @@
         const EMAILJS_SERVICE_ID = 'service_6l0gqn6';
         const EMAILJS_TEMPLATE_ID = 'template_wnpnpak';
         
-        // Certificate template URL
+        // New certificate template URL
         const CERT_TEMPLATE_URL = 'https://i.imgur.com/B2u1szf.jpeg';
 
         const form = document.getElementById('customerForm');
@@ -159,6 +163,7 @@
                         </td>
                         <td class="py-3 px-2">
                             <div class="text-slate-600">${cust.contact_no}</div>
+                            <div class="text-xs font-semibold text-amber-600">${cust.star || 'N/A'}</div>
                             <div>${certLink}</div>
                         </td>
                         <td class="py-3 px-2">${statusBadge}</td>
@@ -180,10 +185,11 @@
             const email_add = document.getElementById('email_add').value;
             const contact_no = document.getElementById('contact_no').value;
             const occupation = document.getElementById('occupation').value;
+            const star = document.getElementById('star').value;
 
             const { error } = await supabaseClient
                 .from('database')
-                .insert([{ name, email_add, contact_no, occupation, status: 'pending' }]);
+                .insert([{ name, email_add, contact_no, occupation, star, status: 'pending' }]);
 
             if (error) {
                 alert('Error saving record: ' + error.message);
@@ -194,7 +200,7 @@
             }
         });
 
-        // Helper to get day with ordinal suffix (e.g. 7 -> "7th", 1 -> "1st", 2 -> "2nd", 3 -> "3rd")
+        // Helper to get day with ordinal suffix (e.g. 7 -> "7th")
         function getDayWithOrdinal(createdAtString) {
             let dayNum = 1;
             if (createdAtString) {
@@ -215,16 +221,42 @@
 
             const j = dayNum % 10,
                   k = dayNum % 100;
-            if (j == 1 && k != 11) {
-                return dayNum + "st";
-            }
-            if (j == 2 && k != 12) {
-                return dayNum + "nd";
-            }
-            if (j == 3 && k != 13) {
-                return dayNum + "rd";
-            }
+            if (j == 1 && k != 11) return dayNum + "st";
+            if (j == 2 && k != 12) return dayNum + "nd";
+            if (j == 3 && k != 13) return dayNum + "rd";
             return dayNum + "th";
+        }
+
+        // Helper function to draw a glowing star shape on canvas
+        function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius, fillColor) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            let step = Math.PI / spikes;
+
+            ctx.save();
+            // Aggressive gold glow effect
+            ctx.shadowColor = '#ffd700';
+            ctx.shadowBlur = 35;
+            ctx.fillStyle = fillColor;
+
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
         }
 
         // Generate dynamic certificate image on HTML5 Canvas
@@ -240,7 +272,7 @@
                     // Draw template image onto canvas
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                    // 1. Draw Customer Name (Times New Roman, #f6d273)
+                    // 1. Draw Customer Name (Times New Roman, #f6d273, Y = 700)
                     ctx.font = 'bold 72px "Times New Roman", Times, serif';
                     ctx.fillStyle = '#f6d273'; 
                     ctx.textAlign = 'center';
@@ -250,7 +282,7 @@
                     const nameY = 700; 
                     ctx.fillText(customer.name, nameX, nameY);
 
-                    // 2. Extract and Draw Dynamic Date with Ordinal Suffix (Ubuntu, white, centered nicely between THIS and OF)
+                    // 2. Draw Dynamic Date (X = 335, Y = 850)
                     const dayString = getDayWithOrdinal(customer.created_at);
                     
                     ctx.font = 'normal 24px "Ubuntu", sans-serif';
@@ -258,10 +290,22 @@
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'alphabetic';
 
-                    // Corrected coordinate positioning between "THIS" and "OF"
                     const dateX = 335; 
                     const dateY = 850; 
                     ctx.fillText(dayString, dateX, dateY);
+
+                    // 3. Draw Star Above Date Issuance Area based on Star Tier
+                    const starTier = (customer.star || '').toLowerCase();
+                    const starCenterX = 248; // Centered above the date column on the left
+                    const starCenterY = 760; // Positioned right above the date text
+
+                    if (starTier.includes('vega')) {
+                        // Big Star for Vega (Outer radius 45, Inner radius 18)
+                        drawStar(ctx, starCenterX, starCenterY, 5, 45, 18, '#f6d273');
+                    } else if (starTier.includes('spica')) {
+                        // Smaller Star for Spica (Outer radius 28, Inner radius 11)
+                        drawStar(ctx, starCenterX, starCenterY, 5, 28, 11, '#f6d273');
+                    }
 
                     // Convert canvas to blob (PNG format)
                     canvas.toBlob(async (blob) => {
@@ -297,9 +341,9 @@
             const dayPreview = getDayWithOrdinal(customer.created_at);
             const previewContainer = document.getElementById('emailPreviewContent');
             previewContainer.innerHTML = `
-                <p class="text-sm text-slate-600 mb-4">Ready to generate a personalized certificate for <strong>${customer.name}</strong> with date <strong>${dayPreview}</strong> (Ubuntu font, white) and name in Times New Roman (#f6d273).</p>
+                <p class="text-sm text-slate-600 mb-4">Ready to generate certificate for <strong>${customer.name}</strong> with Star Tier: <strong>${customer.star || 'Standard'}</strong> and Date: <strong>${dayPreview}</strong>.</p>
                 <div class="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg text-xs">
-                    Clicking send will dynamically render the certificate, save it to Supabase Storage, and send the email with the download link.
+                    Clicking send will dynamically render the certificate with the glowing gold star, save it to Supabase Storage, and send the email with the download link.
                 </div>
             `;
             document.getElementById('emailModal').classList.remove('hidden');
