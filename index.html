@@ -297,14 +297,14 @@
                     // 3. Draw Star Sized to Certification-to-Name Height Space (~150px) Above Date Issuance Area
                     const starTier = (customer.star || '').toLowerCase();
                     const starCenterX = 248; 
-                    const starCenterY = 720; 
+                    const starCenterY = 700; 
 
                     if (starTier.includes('vega')) {
                         // Vega Star (Outer radius 145, Inner radius 58 - perfectly matching CERTIFICATION-to-Name gap height)
-                        drawStar(ctx, starCenterX, starCenterY, 5, 145, 58, '#f6d273');
+                        drawStar(ctx, starCenterX, starCenterY, 5, 180, 72, '#f6d273');
                     } else if (starTier.includes('spica')) {
                         // Spica Star (Outer radius 95, Inner radius 38 - slightly smaller for Spica tier)
-                        drawStar(ctx, starCenterX, starCenterY, 5, 95, 38, '#f6d273');
+                        drawStar(ctx, starCenterX, starCenterY, 5, 130, 52, '#f6d273');
                     }
 
                     // Convert canvas to blob (PNG format)
